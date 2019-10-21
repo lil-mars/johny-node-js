@@ -1,42 +1,83 @@
-var five = require("johnny-five");
-var board = new five.Board();
+const {Board, Motor} = require("johnny-five");
+const board = new Board();
 
-var app = require('express')();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var PORT = process.env.PORT || 8080;
+board.on("ready", () => {
+    /*
+      ArduMoto
+        Motor A
+          pwm: 3
+          dir: 12
 
-var volta;
+        Motor B
+          pwm: 11
+          dir: 13
 
-board.on("ready", function() {
 
-});  
+      AdaFruit Motor Shield
+        Motor A
+          pwm: ?
+          dir: ?
 
-http.listen(PORT,function(){
-  console.log('http://localhost:8080');
-});
+        Motor B
+          pwm: ?
+          dir: ?
 
-app.get('/',(req,res)=>{
-  var led = new five.Led(13);
-  led.on();
-  setTimeout(function()
-  {
-    led.stop();
-    led.off();
-  }, 1500);
-    return res.status(200).send({
-      message: 'The led is blinking'
+
+      Bi-Directional Motors can be initialized by:
+
+        new five.Motor([ 3, 12 ]);
+
+      ...is the same as...
+
+        new five.Motor({
+          pins: [ 3, 12 ]
+        });
+
+      ...is the same as...
+
+        new five.Motor({
+          pins: {
+            pwm: 3,
+            dir: 12
+          }
+        });
+
+     */
+
+
+    const motor = new Motor({
+        pins: {
+            pwm: 3,
+            dir: 12
+        }
     });
-});
-app.get('/exit',(req,res)=>{
-  var led = new five.Led(13);
-  led.blink();
-  setTimeout(function()
-  {
-    led.stop();
-    led.off();
-  }, 1500);
-    return res.status(200).send({
-      message: 'The led is blinking'
+
+    board.repl.inject({
+        motor
     });
+
+    motor.on("start", () => {
+        console.log(`start: ${Date.now()}`);
+    });
+
+    motor.on("stop", () => {
+        console.log(`automated stop on timer: ${Date.now()}`);
+    });
+
+    motor.on("forward", () => {
+        console.log(`forward: ${Date.now()}`);
+
+        // demonstrate switching to reverse after 5 seconds
+        board.wait(5000, () => motor.reverse(50));
+    });
+
+    motor.on("reverse", () => {
+        console.log(`reverse: ${Date.now()}`);
+
+        // demonstrate stopping after 5 seconds
+        board.wait(5000, motor.stop);
+    });
+
+    // set the motor going forward full speed
+    motor.forward(255);
 });

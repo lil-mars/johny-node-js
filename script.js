@@ -1,47 +1,45 @@
-var five = require("johnny-five");
-var board = new five.Board();
-
+const {Board, Motor} = require("johnny-five");
+const board = new Board();
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var PORT = process.env.PORT || 8081;
-
-board.on("ready", function () {
-
-  motor = new five.Motor({
-    pin: 5
-  });
-  motor.stop();
-});
+var PORT = process.env.PORT || 8080;
 
 http.listen(PORT, function () {
-  console.log('http://localhost:8080');
+    console.log('http://localhost:8080');
 });
 
 //max speed 100
 app.get('/', (req, res) => {
-  motor = new five.Motor({
-    pin: 5
-  });
-  motor.start(200);
-  setTimeout(function () {
-    motor.stop();
-  }, 300);
-  return res.status(200).send({
-    message: 'The motor is running'
-  });
+    const motor = new Motor({
+        pins: {
+            pwm: 3,
+            dir: 12
+        }
+    });
+    motor.forward();
+
+    setTimeout(function () {
+        motor.reverse(250);
+        motor.stop();
+        setTimeout(function () {
+            motorFoward();
+        },2000);
+    }, 13000);
+    return res.status(200).send({
+        message: 'The motor is running'
+    });
 });
 
-//max speed 100
-app.get('/exit', (req, res) => {
-  motor = new five.Motor({
-    pin: 5
-  });
-  motor.start(200);
-  setTimeout(function () {
-    motor.stop();
-  }, 300);
-  return res.status(200).send({
-    message: 'The led is stopping'
-  });
-});
+function motorFoward() {
+    const motor = new Motor({
+        pins: {
+            pwm: 3,
+            dir: 12
+        }
+    });
+    motor.reverse(250);
+    setTimeout(function () {
+        motor.stop();
+    }, 2000);
+}
